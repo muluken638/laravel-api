@@ -1,4 +1,4 @@
-name: Deploy via FTP
+name: Deploy Laravel API (SSH)
 
 on:
   push:
@@ -13,10 +13,38 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: FTP Deploy
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
         with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: /public_html/
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.PORT }}
+
+          script: |
+            set -e
+
+            echo "🚀 Starting deployment"
+
+            cd /home/atmplcrz/laravel-api
+
+            echo "📥 Pulling latest code"
+            git pull origin main
+
+            echo "📦 Installing dependencies"
+            /usr/local/bin/composer install --no-dev --optimize-autoloader
+
+            echo "🧹 Clearing cache"
+            php artisan optimize:clear
+
+            echo "⚡ Caching config"
+            php artisan config:cache
+            php artisan route:cache
+
+            echo "🗄 Running migrations"
+            php artisan migrate --force
+
+            echo "📂 Linking storage"
+            php artisan storage:link || true
+
+            echo "✅ Deployment completed"
