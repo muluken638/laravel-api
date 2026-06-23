@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy to Server
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.HOST }}
@@ -18,14 +18,27 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            echo "Current directory:"
+            set -e
+
+            echo "🚀 Starting deployment"
+
+            cd /home/atmplcrz/laravel-api
+
+            echo "📂 Current directory:"
             pwd
 
-            echo "Current user:"
-            whoami
+            echo "⬇️ Pulling latest code..."
+            git pull origin main
 
-            echo "Directory contents:"
-            ls -la
+            echo "🧹 Clearing Laravel cache..."
+            php artisan optimize:clear
 
-            echo "Searching for Laravel artisan files:"
-            find $HOME -name artisan 2>/dev/null | head -20
+            echo "⚙️ Caching config/routes/views..."
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+
+            echo "🗄️ Running migrations..."
+            php artisan migrate --force
+
+            echo "✅ Deployment completed successfully"
