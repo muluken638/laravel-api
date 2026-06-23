@@ -16,16 +16,16 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.PORT }}
+          port: 22
           script: |
-            cd ${{ secrets.PROJECT_PATH }}
+            echo "Current directory:"
+            pwd
 
-            git pull origin main
+            echo "Current user:"
+            whoami
 
-            php artisan optimize:clear
+            echo "Directory contents:"
+            ls -la
 
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:cache
-
-            php artisan migrate --force
+            echo "Searching for Laravel artisan files:"
+            find $HOME -name artisan 2>/dev/null | head -20
